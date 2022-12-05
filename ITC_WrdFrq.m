@@ -331,49 +331,65 @@ for m = 1:length(EpochType)
     saveas(h,[PPath.FigPath figname],'svg');
 end
 
-% %%% for Targ_WrdOn, stat over [-0.2 0]s
-% % averaged saccade duration towards target words
-% sac_dur = cellfun(@(x) nanmean(x(:,6)), ITC.Targ_TrlInfo, 'Uni', true);
-% sac_dur_avg = mean(mean(sac_dur));
 
-%% find the best-performance sub (highest ITC diff)--> 20190608_b54e
-load('SigSens_WrdOffPreTarg.mat')
-load('WrdOff_ITC.mat')
-itc_avg = [];
-timid = dsearchn([ITC.PreTarg_low{1,1}.time]',[-0.2;0]);
-timid = timid(1):timid(2);
-frqid = dsearchn([ITC.PreTarg_low{1,1}.freq]',[9;13]);
-frqid = frqid(1):frqid(2);
-for s = 1:size(ITC.PreTarg_low,2)
-    chanid = [];
-    for ch = 1:length(SigSens.label)
-        chanid = [chanid find(strcmp(ITC.PreTarg_low{1,s}.label,SigSens.label{ch}))];
-    end
-    itc_low = ITC.PreTarg_low{1,s}.powspctrm(chanid,frqid,timid); 
-    itc_low = mean(mean(mean(itc_low,1),2),3);
-    itc_high = ITC.PreTarg_high{1,s}.powspctrm(chanid,frqid,timid);
-    itc_high = mean(mean(mean(itc_high,1),2),3);
-    itc_avg = [itc_avg; [itc_low itc_high]];
-end
-[~,p,~,stats] = ttest(itc_avg(:,1),itc_avg(:,2));
-stats.p = p; %tstat=5.338; df=37; sd=0.025;p=4.95e-6
-% sub who has the highest itc_diff
-[val,id] = max(itc_avg(:,1)-itc_avg(:,2))
-sub = ITC.subs{id}; %20190608_b54e
-% save out result
-Ttest.time = ITC.PreTarg_low{1,1}.time(timid);
-Ttest.freq = ITC.PreTarg_low{1,1}.freq(frqid);
-Ttest.data = itc_avg;
-Ttest.stats = stats;
-ITC.PreTarg_alphaITC_Ttest = Ttest;
-save('WrdOff_ITC.mat','ITC','-v7.3');
-
-
-
-
-
-
-
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%====Supplementary Fig S3: plot the raw PLI for low/high condition ===%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% figname = 'Raw PLI_pretarget_high' ;
+% itc_avg = grandavg_high.powspctrm(SigSens.mask,:,:);
+% itc_avg = squeeze(mean(itc_avg,1));
+figname = 'Raw PLI_pretarget_low' ;
+itc_avg = grandavg_low.powspctrm(SigSens.mask,:,:);
+itc_avg = squeeze(mean(itc_avg,1));
+% plot
+h = figure('Name',figname,'color',[1 1 1]);
+pcolor(grandavg_high.time, grandavg_high.freq, itc_avg);
+shading interp;
+cmap = colormap(cbrewer('div','RdBu',32));
+cmap = colormap(flipud(cmap));
+%%% for colormap
+colorbar('FontWeight','normal','FontSize',12,'FontName','Arial')
+caxis([0.1 0.4])
+xlim([-0.4 0.4])
+% title
+title('Averaged raw PLI, saccade on to high freq target','FontWeight','normal','FontSize',14,'FontName','Arial');
+% plot some lines
+hold on;
+plot([-0.5 0.5],[9 9],':k','LineWidth',1)
+plot([-0.5 0.5],[13 13],':k','LineWidth',1)
+plot([xline xline],[4 30],':k','LineWidth',1)
+plot([0 0],[4 30],':k','LineWidth',1)
+set(gca,'XTick',-0.4:0.2:0.4);
+set(gca,'XTickLabel',{'-0.4','-0.2',plot_0ms{m},'0.2','0.4'},'FontWeight','normal','FontSize',12,'FontName','Arial')
+set(gca,'YTick',5:5:30);
+set(gca,'YTickLabel',{'5','','','20','25','30'},'FontWeight','normal','FontSize',12,'FontName','Arial')
+text([-0.43 -0.445],[9 13],[{'9'},{'13'}],'FontWeight','normal','FontSize',12,'FontName','Arial')
+ylabel('Frequency (Hz)','FontWeight','normal','FontSize',12,'FontName','Arial')
+xlabel('Time (s)','FontWeight','normal','FontSize',12,'FontName','Arial')
+saveas(h,[PPath.FigPath figname]);
+% zoom in
+figname = [figname '_zoomin'];
+h = figure('Name',figname,'color',[1 1 1]);
+pcolor(grandavg_high.time, grandavg_high.freq, itc_avg);
+shading interp;
+cmap = colormap(cbrewer('div','RdBu',32));
+cmap = colormap(flipud(cmap));
+%%% for colormap
+colorbar('FontWeight','normal','FontSize',12,'FontName','Arial')
+xlim([-0.2 0])
+caxis([0.15 0.2])
+ylim([8 30])
+set(gca,'XTick',[-0.2 0]);
+set(gca,'XTickLabel',{'-0.2','saccade on'},'FontWeight','normal','FontSize',12,'FontName','Arial')
+set(gca,'YTick',5:5:30);
+set(gca,'YTickLabel',{'','','','20','25','30'},'FontWeight','normal','FontSize',12,'FontName','Arial')
+text([-0.21 -0.21 -0.214],[8 9 13],[{'8'},{'9'},{'13'}],'FontWeight','normal','FontSize',12,'FontName','Arial')
+ylabel('Frequency (Hz)','FontWeight','normal','FontSize',12,'FontName','Arial')
+xlabel('Time (s)','FontWeight','normal','FontSize',12,'FontName','Arial')
+hold on
+plot([-0.2 0],[9 9],':k','LineWidth',1)
+plot([-0.2 0],[13 13],':k','LineWidth',1)
+saveas(h,[PPath.FigPath figname]);
 
 
 

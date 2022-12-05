@@ -7,7 +7,7 @@ function TFR_Alpha(sid)
 tic
 server = 1;
 %%%% running setting
-runconds = {'WrdOff','WrdOn'};
+runconds = {'WrdOff'}; % align data with word off of pre-target words equals aligh data with saccade onset to target words
 EpochType = {'PreTarg','Targ'};
 targid = [-1, 0];
 minfix = 0; %% minimum fixation duration (80ms threshold in the pre-processing)
@@ -183,8 +183,8 @@ else
         clear TFR
     end
     
-    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%====== plotting raw alpha power for PreTarg_SacOn ======= %%
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%====Fig 2A: plotting raw alpha power for PreTarg_SacOn ===%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%get averaged TFR over subs
     Data_low = WrdOff_TFR.PreTarg_low;
@@ -199,30 +199,6 @@ else
     %%% transfer the unit from (T/m)^2 to (fT/m)^2
     plot_all.powspctrm = plot_all.powspctrm.*10e24;
     
-% %     %% plotting TFR for epochs across all conditions for pre-target wrd_on
-% %     %%% for colormap
-% %     cmap = colormap(cbrewer('div','RdBu',32));
-% %     cmap = colormap(flipud(cmap));
-% %     
-% %     %%%%%%%%%  plot figures %%%%%%%%%
-% %     figname = 'TFR_raw_WrdOn_PreTarg';
-% %     h = figure('name',figname,'color',[1 1 1],'position',[0 0 220 150]);
-% %     cfg = [];
-% %     cfg.baseline = 'no';
-% %     cfg.showlabels = 'no';
-% %     cfg.comment = 'no';
-% %     cfg.layout = 'neuromag306cmb.lay';
-% %     cfg.colormap = cmap;
-% %     cfg.dataname = figname;
-% %     cfg.xlim = [-0.4 0.4]; %% only plot ±0.4s to avoid the 'ugly' edge artefacts
-% %     % cfg.zlim = [-0.4 0.4];
-% %     colorbar;
-% %     ft_multiplotTFR(cfg, plot_all);
-% %     title('Raw power during pre-target interval','FontSize',7);
-% %     set(gcf, 'renderer', 'painters')
-% %     saveas(h,[PPath.FigPath figname]);
-    
-
     %%averaged TFR for all chans
     figname = 'TFR_raw_WrdOff_PreTarg_OverAllSens';
     h = figure('Name',figname,'color',[1 1 1],'position',[0 0 250 150]);
@@ -254,13 +230,11 @@ else
     saveas(h,[PPath.FigPath figname]);
     saveas(h,[PPath.FigPath figname],'svg');
     
-    %%plot topography figure
-    occip_left = {'MEG1642+1643';'MEG1712+1713';'MEG1722+1723';'MEG1732+1733';...
-        'MEG1742+1743';'MEG1912+1913';'MEG1922+1923';'MEG1932+1933';'MEG1942+1943'};
-    occip_right = {'MEG2312+2313';'MEG2322+2323';'MEG2332+2333';'MEG2342+2343';...
-        'MEG2432+2433';'MEG2512+2513';'MEG2522+2523';'MEG2532+2533';'MEG2542+2543'};
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%====Fig 2C: plotting topography for PreTarg_SacOn ===%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     cfg            = [];
-    cfg.parameter  ='powspctrm';
+    cfg.parameter  = 'powspctrm';
     cfg.layout     = 'neuromag306cmb.lay';
     cfg.maskstyle  = 'saturation';
     cfg.contournum = 0;
@@ -272,8 +246,6 @@ else
     cfg.marker     = 'no'; %'numbers';
     cfg.comment    = 'no';
     cfg.style      = 'straight';
-    cfg.highlightchannel = [occip_left;occip_right]; %OccipSens;
-    cfg.highlight        = 'on';
     figname        = 'TFR_raw_WrdOff_PreTarg_topo';
     h              = figure('name',figname,'color',[1 1 1],'position',[0 0 220 150]);
     ft_topoplotTFR(cfg,plot_all);
@@ -282,56 +254,79 @@ else
     set(gcf, 'renderer', 'painters')
     saveas(h,[PPath.FigPath figname]);
     saveas(h,[PPath.FigPath figname],'svg');
-        
-    %%plot lateralized alpha power
-    figname = 'TFR_WrdOff_PreTarg_alpha_LI';
-    % select left/right alpha power
+    
+    
+    
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%====Supplementary Fig S1: power spectrum with baseline correction ===%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     cfg = [];
-    cfg.channel = occip_left;
-    alpha_left = ft_selectdata(cfg,plot_all);
-    cfg.channel = occip_right;
-    alpha_right = ft_selectdata(cfg,plot_all);
-    % replace powspctrm with lateralization index
-    plot_all.powspctrm = (alpha_right.powspctrm-alpha_left.powspctrm)./(alpha_right.powspctrm+alpha_left.powspctrm);
-    h = figure('Name',figname,'color',[1 1 1],'position',[0 0 250 150]);
+    cfg.baseline = [-0.1 0.1];
+    cfg.baselinetype = 'absolute';
+    plot_all = ft_freqbaseline(cfg,plot_all);
+    
+    %%% plot
+    figname = 'TFR_WrdOff_PreTarg_OverAllSens_RMBL';
+    h = figure('Name',figname,'color',[1 1 1]);
     pcolor(plot_all.time, plot_all.freq, squeeze(mean(plot_all.powspctrm,1)));
     shading interp;
-    caxis([-0.07 0.07])
     %%% for colormap
     cmap = colormap(cbrewer('div','RdBu',32));
     cmap = colormap(flipud(cmap));
-    title('Averaged power over all planar sensors','FontSize',7,'FontName','Arial')
+    title('Averaged power over all planar sensors,+-0.1','FontSize',14,'FontName','Arial');
     % plot some lines
     hold on;
-    plot([-0.5 0.5],[9 9],':k','LineWidth',1)
-    plot([-0.5 0.5],[13 13],':k','LineWidth',1)
-    plot([-0.2 -0.2],[4 30],':k','LineWidth',1)
-    plot([0 0],[4 30],':k','LineWidth',1)
-    xlim([-0.4 0.4])
+    plot([-0.5 0.5],[9 9],':k','LineWidth',1);
+    plot([-0.5 0.5],[13 13],':k','LineWidth',1);
+    plot([-0.2 -0.2],[4 30],':k','LineWidth',1);
+    plot([0 0],[4 30],':k','LineWidth',1);
     set(gca,'XTick',-0.4:0.2:0.4);
-    set(gca,'XTickLabel',{'-0.4','-0.2','saccade on','0.2','0.4'},'FontWeight','normal','FontSize',7,'FontName','Arial')
+    set(gca,'XTickLabel',{'-0.4','-0.2','saccade on','0.2','0.4'},'FontWeight','normal','FontSize',12,'FontName','Arial')
     set(gca,'YTick',5:5:30);
-    set(gca,'YTickLabel',{'5','','','20','25','30'},'FontWeight','normal','FontSize',7,'FontName','Arial')
-    text([-0.45 -0.48],[9 13],[{'9'},{'13'}],'FontWeight','normal','FontSize',7,'FontName','Arial')
-    ylabel('Frequency (Hz)','FontWeight','normal','FontSize',7,'FontName','Arial')
-    xlabel('Time (s)','FontWeight','normal','FontSize',7,'FontName','Arial')
-    caxis([0 250])
+    set(gca,'YTickLabel',{'5','','','20','25','30'},'FontWeight','normal','FontSize',12,'FontName','Arial')
+    colormap
+    xlim([-0.3 0.3]);
+    ylim([5 30])
+    text([-0.435 -0.445],[9 13],[{'9'},{'13'}],'FontWeight','normal','FontSize',12,'FontName','Arial')
+    ylabel('Frequency (Hz)','FontWeight','normal','FontSize',12,'FontName','Arial')
+    xlabel('Time (s)','FontWeight','normal','FontSize',12,'FontName','Arial')
     colorbar
-    text(-0.22,23,{['pre-target'],['interval']},'FontWeight','normal','FontSize',7,'FontName','Arial')
-    text(0.72,7,'Raw power (fT/m)^2','FontWeight','normal','FontSize',7,'FontName','Arial','Rotation',90)
+    caxis([-5 5])
+    text(-0.22,23,{['pre-target'],['interval']},'FontWeight','normal','FontSize',12,'FontName','Arial')
+    text(0.6,7,'Absolute power change(fT/m)^2','FontWeight','normal','FontSize',12,'FontName','Arial','Rotation',90)
+    set(gcf, 'renderer', 'painters')
+    saveas(h,[PPath.FigPath figname]);
+    
+    %%% topo
+    cfg            = [];
+    cfg.parameter  ='powspctrm';
+    cfg.layout     = 'neuromag306cmb.lay';
+    cfg.maskstyle  = 'saturation';
+    cfg.contournum = 0;
+    cfg.colormap   = cmap;
+    % cfg.zlim       = [-5 5];
+    cfg.xlim       = [-0.4 0.4];
+    cfg.ylim       = [9 13];
+    cfg.gridscale  = 360;
+    cfg.marker     = 'no'; %'numbers';
+    cfg.comment    = 'no';
+    cfg.style      = 'straight';
+    figname        = 'TFR_WrdOff_PreTarg_topo_RMBL';
+    h              = figure('name',figname,'color',[1 1 1]);
+    ft_topoplotTFR(cfg,plot_all);
+    title({['Topography for alpha power'],['during the pre-target interval']},'FontWeight','normal','FontSize',12,'FontName','Arial');
+    colorbar
     set(gcf, 'renderer', 'painters')
     saveas(h,[PPath.FigPath figname]);
     saveas(h,[PPath.FigPath figname],'svg');
     
     
-    
-    
-    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%====== plotting difference alpha power for PreTarg_SacOn ======= %%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%====Supplementary Fig S6A: alpha power difference between conditions ===%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%plot power-diff for WrdOff_pre-target interval over sig chans
     % get the sig sens
-    load('Z:\Saccade_AlphaPhase\Results\ITC\SigSens_WrdOffPreTarg') %SigSens 
+    load('Z:\Saccade_AlphaPhase\Results\ITC\SigSens_WrdOffPreTarg') %SigSens
     % get power for both conditions
     Data_low = WrdOff_TFR.PreTarg_low;
     Data_high = WrdOff_TFR.PreTarg_high;
@@ -349,7 +344,7 @@ else
     % get averaged tfr_diff over sig sens
     tfr_diff_avg = squeeze(mean(tfr_diff.powspctrm(chan_id,:,:),1));
     tfr_diff_avg = tfr_diff_avg.*10e24;%transfer unit from (T/m)^2 to (fT/m)^2
-    %% plot
+    %%% plot
     figname = 'TFR_diff_WrdOff_PreTarg';
     h = figure('Name',figname,'color',[1 1 1],'position',[0 0 250 150]);
     pcolor(tfr_diff.time, tfr_diff.freq,tfr_diff_avg);
@@ -381,7 +376,11 @@ else
     saveas(h,[PPath.FigPath figname],'svg');
     
     
-    %% simple ttest for alpha power for WrdOff_pre-target interval over sig chans
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%====Supplementary Fig S6B: Ttest of the alpha power difference ===%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%simple ttest for alpha power for WrdOff_pre-target interval over sig chans
     nsub = length(WrdOff_TFR.PreTarg_low);
     alpha_pow = nan(nsub,2);
     for s = 1:nsub
@@ -399,7 +398,7 @@ else
     AlphaPow_WrdOff_PreTarg.alpha_pow = alpha_pow;
     AlphaPow_WrdOff_PreTarg.stat = stat;
     save([PPath.FigPath 'AlphaPow_WrdOff_PreTarg'],'AlphaPow_WrdOff_PreTarg','-v7.3');
-    %% % plot
+    %%% plot
     colmat = [0 114 189;217 83 25]./255;
     figtitle = 'AlphaPow_WrdOff_PreTarg_violin';
     h = figure('Name',figtitle,'color',[1 1 1],'position',[0 0 220 150]);
@@ -420,7 +419,7 @@ else
     y1 = vp(1,1).ScatterPlot.YData;
     x2 = vp(1,2).ScatterPlot.XData;
     y2 = vp(1,2).ScatterPlot.YData;
-    plot([x1; x2],[y1; y2],'Color',[.8 .8 .8],'linewidth',0.3)    
+    plot([x1; x2],[y1; y2],'Color',[.8 .8 .8],'linewidth',0.3)
     plot([1 2],[1900 1900],'k','LineWidth',1)
     text(1.5,2000,'n.s.','FontWeight','normal','FontSize',7,'FontName','Arial')
     ylabel('Power (T/cm)^2','FontSize',7,'FontWeight','normal','FontName','Arial');
@@ -439,32 +438,3 @@ else
     [subid wrdfrq power];
     
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
